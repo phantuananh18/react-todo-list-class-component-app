@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import { Button, Input } from "antd";
 import { v4 } from "uuid";
 import { ListItemText, IconButton } from "@mui/material";
@@ -7,96 +8,46 @@ import {
   CheckCircleTwoTone,
   DeleteFilled,
 } from "@ant-design/icons";
+import {
+  onHandleAddTodo,
+  onHandleDeleteTodo,
+  onHandleCompleteTodo,
+  onHandleResetTodo,
+} from "./redux/actions/todoActions";
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      todoList: [],
-      task: "",
-    };
-    this.inputRef = React.createRef();
-    this.onHandleAddTodo = this.onHandleAddTodo.bind(this);
-    this.onHandleDeleteTodo = this.onHandleDeleteTodo.bind(this);
-    this.onRefreshTodo = this.onRefreshTodo.bind(this);
-  }
-
-  onHandleAddTodo() {
-    this.setState({
-      todoList: [
-        {
-          id: v4(),
-          task: this.state.task,
-          isCompleted: false,
-        },
-        ...this.state.todoList,
-      ],
-      task: "",
-    });
-    this.inputRef.current.focus();
-  }
-
-  onHandleDeleteTodo(id) {
-    this.setState({
-      todoList: this.state.todoList.filter((todo) => todo.id !== id),
-    });
-  }
-
-  onHandleCompleteTodo(task) {
-    this.setState({
-      todoList: this.state.todoList.map((todo) =>
-        todo.task === task ? { ...todo, isCompleted: true } : todo
-      ),
-    });
-  }
-
-  onRefreshTodo() {
-    this.setState({
-      todoList: [],
-    });
-  }
   render() {
+    const {
+      onHandleAddTodo,
+      onHandleResetTodo,
+      onHandleCompleteTodo,
+      onHandleDeleteTodo,
+    } = this.props;
+
+    const { todoList, task } = this.props.todo;
+    console.log("Text: ", task);
+    console.log("List: ", todoList);
     return (
       <div className="App">
         <h1>React Todo List App</h1>
 
         <div>
-          <Input
-            style={{ width: 500 }}
-            size="large"
-            value={this.state.task}
-            onChange={(event) => {
-              this.setState({ task: event.target.value });
-            }}
-            autoFocus
-            ref={this.inputRef}
-          />
-          <Button type="primary" size="large" onClick={this.onHandleAddTodo}>
+          <Input style={{ width: 500 }} size="large" autoFocus value={task} />
+          <Button type="primary" size="large" onClick={onHandleAddTodo}>
             Add a new task
           </Button>
         </div>
 
         <div style={{ margin: 20 }}>
-          {this.state.todoList.map((todo) => {
-            return (
-              <ListItemText key={todo.id}>
-                {todo.task}
-                <IconButton
-                  onClick={() => this.onHandleCompleteTodo(todo.task)}
-                >
-                  {!todo.isCompleted ? (
-                    <CheckCircleFilled />
-                  ) : (
-                    <CheckCircleTwoTone />
-                  )}
-                </IconButton>
+          <ListItemText>
+            <IconButton onClick={onHandleCompleteTodo}>
+              <CheckCircleFilled />
+            </IconButton>
 
-                <IconButton onClick={() => this.onHandleDeleteTodo(todo.id)}>
-                  <DeleteFilled />
-                </IconButton>
-              </ListItemText>
-            );
-          })}
+            <IconButton onClick={onHandleDeleteTodo}>
+              <DeleteFilled />
+            </IconButton>
+          </ListItemText>
         </div>
 
         <div style={{ margin: 20 }}>
@@ -104,7 +55,7 @@ class App extends Component {
             type="primary"
             size="large"
             shape="round"
-            onClick={this.onRefreshTodo}
+            onClick={onHandleResetTodo}
           >
             Refresh
           </Button>
@@ -114,4 +65,19 @@ class App extends Component {
   }
 }
 
-export default App;
+const mapStateToProps = (state) => {
+  return {
+    todo: state.todo,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    onHandleAddTodo: () => dispatch(onHandleAddTodo()),
+    onHandleDeleteTodo: (task) => dispatch(onHandleDeleteTodo(task)),
+    onHandleCompleteTodo: (id) => dispatch(onHandleCompleteTodo(id)),
+    onHandleResetTodo: () => dispatch(onHandleResetTodo()),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
